@@ -8,6 +8,7 @@ Also if you are admin you can link your google drive account to store excels the
 
 ![Preview 2](https://github.com/tempestgf/picxl/blob/main/images/Preview2.png)
 
+## Setup
 
 .env file must be like:
 
@@ -35,3 +36,9 @@ To compile:
 To server production (after running build):
 
 `npm start`
+
+## Demo
+
+Demo at http://tomeacnic.hopto.org:8080
+
+`user: test ; password: test`
