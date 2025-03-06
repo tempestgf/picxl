@@ -11,8 +11,8 @@ app.prepare().then(() => {
   createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
     handle(req, res, parsedUrl);
-  }).listen(8080, (err) => {
+  }).listen(80, (err) => {
     if (err) throw err;
-    console.log('Servidor HTTP corriendo en el puerto 8080');
+    console.log('Servidor HTTP corriendo en el puerto 80');
   });
 });
