@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // O "postgresql"/"mysql" según tu elección
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  username          String   @unique
+  password          String
+  tickets           Ticket[]
+  isAdmin           Boolean  @default(false)
+  googleAccessToken String?  // Campo opcional para almacenar el token de Google
+}
+
+model Ticket {
+  id           Int      @id @default(autoincrement())
+  merchantName String
+  dateTime     DateTime
+  total        Float
+  imageUrl     String
+  ticketType   String   @default("individual")
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+}
+  

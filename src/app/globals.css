@@ -1,21 +1,411 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #f8f9fa;
+  --background-secondary: #ffffff;
   --foreground: #171717;
+  --primary: #dc2626; /* Red-600 for better contrast */
+  --primary-hover: #b91c1c; /* Red-700 */
+  --primary-light: #fee2e2; /* Red-100 */
+  --secondary: #2563eb; /* Blue-600 */
+  --secondary-hover: #1d4ed8; /* Blue-700 */
+  --success: #16a34a; /* Green-600 */
+  --success-light: #dcfce7; /* Green-100 */
+  --warning: #ea580c; /* Orange-600 */
+  --danger: #dc2626; /* Red-600 */
+  --gray-100: #f7fafc;
+  --gray-200: #edf2f7;
+  --gray-300: #e2e8f0;
+  --gray-400: #cbd5e0;
+  --gray-500: #a0aec0;
+  --gray-600: #718096;
+  --gray-650: #4f5b76; /* Custom color for better dark mode alternating rows */
+  --gray-700: #4a5568;
+  --gray-800: #2d3748;
+  --gray-900: #1a202c;
+  --transition-normal: all 0.3s ease;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --border-radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #111827;
+    --background-secondary: #1f2937;
+    --foreground: #f9fafb;
+    --primary: #f87171; /* Red-400 for even better visibility in dark mode */
+    --primary-hover: #ef4444; /* Red-500 */
+    --primary-light: #991b1b; /* Red-800 - darker bg but still visible */
+    --success: #4ade80; /* Green-400 for better contrast in dark */
+    --success-light: #065f46; /* Green-800 */
+    --warning: #fb923c; /* Orange-400 */
+    --danger: #f87171; /* Red-400 */
+    --gray-100: #1a202c;
+    --gray-200: #2d3748;
+    --gray-300: #4a5568;
+    --gray-400: #718096;
+    --gray-500: #a0aec0;
+    --gray-600: #cbd5e0;
+    --gray-650: #374151; /* Custom for dark mode alternating rows */
+    --gray-700: #e2e8f0;
+    --gray-800: #edf2f7;
+    --gray-900: #f7fafc;
+    --gradient-primary: linear-gradient(to right, #f87171, #ef4444);
+    --gradient-secondary: linear-gradient(to right, #60a5fa, #3b82f6);
+    --gradient-success: linear-gradient(to right, #4ade80, #22c55e);
   }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+
+/* Accessibility Improvements */
+:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast focus for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Make button text more legible */
+button, 
+.btn {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Ensure text is legible on colored backgrounds */
+.bg-red-600 {
+  --tw-text-opacity: 1;
+  color: rgba(255, 255, 255, var(--tw-text-opacity));
+}
+
+/* Better table styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+
+td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+/* Create 2px space between table cells for better visual separation */
+tr th:first-child,
+tr td:first-child {
+  border-left: none;
+}
+
+tr th:last-child,
+tr td:last-child {
+  border-right: none;
+}
+
+/* Custom Utilities */
+.card-hover {
+  transition: var(--transition-normal);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Additional animations and visual effects */
+.animate-pulse-soft {
+  animation: pulseSoft 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounceSoft 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.glass-effect {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-effect {
+  background-color: rgba(30, 41, 59, 0.8); /* Higher opacity for better contrast */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.shadow-inner-top {
+  box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes bounceSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Add this new animation for smooth fading of modals */
+.modal-backdrop {
+  backdrop-filter: blur(5px);
+  transition: backdrop-filter 0.3s ease-in-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  animation: modalFadeIn 0.3s ease forwards;
+}
+
+/* Add highlight animation for success states */
+@keyframes highlight {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-highlight {
+  background-size: 200% 200%;
+  animation: highlight 2s ease infinite;
+}
+
+/* Custom Components */
+.btn {
+  @apply py-2 px-4 rounded-lg font-medium transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-opacity-50;
+}
+
+.btn-primary {
+  @apply bg-red-500 hover:bg-red-600 text-white focus:ring-red-300;
+}
+
+.btn-secondary {
+  @apply bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-300;
+}
+
+.btn-outline {
+  @apply border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 focus:ring-gray-200 dark:focus:ring-gray-700;
+}
+
+.input {
+  @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-600 transition-all duration-200;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th, td {
+  @apply border-b border-gray-200 dark:border-gray-700;
+}
+
+th {
+  @apply font-semibold text-left px-4 py-3;
+}
+
+td {
+  @apply px-4 py-3;
+}
+
+/* Custom Scroll Bar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-200);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Enhancing existing elements */
+button:active {
+  transform: scale(0.97);
+}
+
+/* Add new high contrast utility classes */
+.high-contrast-text {
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .high-contrast-text {
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure button text remains visible in all states */
+button:disabled {
+  opacity: 0.7;
+}
+
+.dark button:disabled {
+  opacity: 0.5;
+}
+
+/* Improve form field contrast in dark mode */
+.dark input, 
+.dark select, 
+.dark textarea {
+  background-color: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.8);
+  color: #f1f5f9; /* slate-100 */
+}
+
+.dark input:focus, 
+.dark select:focus, 
+.dark textarea:focus {
+  border-color: #f87171; /* red-400 */
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.3);
+}
+
+/* Better visibility for table rows in dark mode */
+.dark tr:nth-child(even) {
+  background-color: rgba(51, 65, 85, 0.5); /* slate-700 at 50% */
+}
+
+/* Add these styles to the end of the file */
+
+/* Smooth theme transition */
+html {
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Ensure transitions on common elements */
+body,
+header,
+footer,
+main,
+.card,
+.btn,
+.input,
+button,
+input,
+textarea,
+select {
+  transition: background-color 0.3s ease-in-out, 
+              color 0.3s ease-in-out, 
+              border-color 0.3s ease-in-out, 
+              box-shadow 0.3s ease-in-out;
+}
+
+/* Fix for flashing on theme toggle */
+html.transition * {
+  transition-delay: 0ms !important;
+}
+
+/* Adjust contrast on dark mode for better readability */
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39;
+  --background-end-rgb: 17, 24, 39;
 }
