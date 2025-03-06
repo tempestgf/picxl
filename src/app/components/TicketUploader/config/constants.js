@@ -1,4 +1,4 @@
-export const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "AIzaSyBvfAYMmoBWc7KGSRl5DOhZECHjsFsDAQE";
+export const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 export const processingSteps = [
   { label: "Preparación", icon: "FiFileText", step: 0 },

@@ -29,8 +29,7 @@ import {
 } from "react-icons/fi";
 
 const GOOGLE_API_KEY =
-  process.env.NEXT_PUBLIC_GOOGLE_API_KEY ||
-  "AIzaSyBvfAYMmoBWc7KGSRl5DOhZECHjsFsDAQE";
+  process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 // Función para convertir el formato "HH:mm dd/mm/yy" o "HH:mm dd/mm/yyyy" a un objeto Date válido
 function parseCustomDate(dateStr) {

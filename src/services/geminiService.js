@@ -1,4 +1,4 @@
-const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "AIzaSyBvfAYMmoBWc7KGSRl5DOhZECHjsFsDAQE";
+const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 export async function callGeminiAPI(ocrText) {
   const prompt = `
