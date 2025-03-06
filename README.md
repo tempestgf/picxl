@@ -41,4 +41,4 @@ To server production (after running build):
 
 Demo at https://tickets.tempestgf.es
 
-`user: test ; password: test`
+`user: test ; password: test` or `betacode` for beta.
