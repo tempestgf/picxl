@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql" // O "postgresql"/"mysql" según tu elección
-  url      = env("picxl_POSTGRES_PRISMA_URL")
+  url      = env("POSTGRES_PRISMA_URL")
 }
 
 model User {
