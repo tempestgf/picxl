@@ -34,6 +34,12 @@
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --border-radius: 0.5rem;
+  --color-background-rgb: 245, 245, 245;
+  --color-foreground: #e2e2e2;
+  --color-primary: #cccccc;
+  --color-button-bg: #ff6600;
+  --color-button-bg-hover: #ff8800;
+  --color-border: #333333;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -408,4 +414,5 @@ html.transition * {
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 17, 24, 39;
   --background-end-rgb: 17, 24, 39;
+  --color-background-rgb: 10, 10, 10;
 }

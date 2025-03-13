@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center">
           <div className="flex items-center gap-2 mb-4 sm:mb-0">
             <img
-              src="/logo.svg"
+              src="/logo.gif"
               alt="Logo"
               className="h-6 w-auto dark:invert transition duration-300"
             />

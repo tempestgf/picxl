@@ -114,7 +114,7 @@ export default function Header({
         <div className="flex items-center">
           <div className="flex items-center transition-transform hover:scale-105">
             <img
-              src="/logo.svg"
+              src="/logo.gif"
               alt="Logo"
               className="h-7 w-auto sm:h-9 dark:invert"
             />
