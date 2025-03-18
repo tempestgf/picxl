@@ -1,8 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { createClient } from '@supabase/supabase-js';
 
 const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta";
+
+// Inicializar el cliente de Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function authenticate(request) {
   const cookieHeader = request.headers.get("cookie") || "";
@@ -69,9 +75,10 @@ export async function POST(request) {
       imageUrl: providedImageUrl,
       ticketType,
     } = await request.json();
+    
     // Si no se recibe imageName, se intenta extraer el nombre de archivo desde imageUrl
     const finalImageName = imageName || (providedImageUrl ? providedImageUrl.split('/').pop() : null);
-    if (!merchantName || !dateTime || !total || !finalImageName) {
+    if (!merchantName || !dateTime || !total || (!finalImageName && !providedImageUrl)) {
       return new Response(
         JSON.stringify({ error: "Faltan datos del ticket" }),
         {
@@ -91,10 +98,22 @@ export async function POST(request) {
       ...timePart.split(":")
     );
 
-    // Define el dominio completo (usa process.env.DOMAIN si está definido)
-    const DOMAIN = process.env.DOMAIN || "http://tomecanic.hopto.org:8080";
-    // Construir la URL absoluta de la imagen usando el nombre final
-    const finalImageUrl = `${DOMAIN}/api/image/${finalImageName}`;
+    // Usar la URL completa si se proporcionó, o construir una con la URL pública de Supabase
+    let finalImageUrl;
+    
+    if (providedImageUrl) {
+      // Si ya tenemos una URL completa, la usamos directamente
+      finalImageUrl = providedImageUrl;
+    } else if (finalImageName) {
+      // Si tenemos un nombre pero no URL, obtenemos la URL pública de Supabase
+      const { data } = supabase
+        .storage
+        .from('images')
+        .getPublicUrl(`uploads/${finalImageName}`);
+      
+      finalImageUrl = data.publicUrl;
+    }
+    
     // Si no se envía ticketType, se usará "individual" por defecto
     const finalTicketType = ticketType || "individual";
 
@@ -102,12 +121,13 @@ export async function POST(request) {
       data: {
         merchantName,
         dateTime: formattedDate,
-        total: parseFloat(total.replace("€", "")),
+        total: parseFloat(total.toString().replace("€", "")),
         imageUrl: finalImageUrl,
         ticketType: finalTicketType,
         user: { connect: { id: userId } },
       },
     });
+    
     return new Response(
       JSON.stringify({ message: "Ticket guardado", ticket }),
       {
@@ -116,6 +136,7 @@ export async function POST(request) {
       }
     );
   } catch (error) {
+    console.error("Error al guardar ticket:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Error interno" }),
       {
