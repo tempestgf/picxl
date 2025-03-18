@@ -2,7 +2,7 @@ const { createServer } = require('https');
 const { readFileSync } = require('fs');
 const next = require('next');
 const { parse } = require('url');
-const { disconnectPrisma } = require('./prisma/client');
+const { disconnectPrisma } = require('./lib/prisma');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = require('next')({ dev });

@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { createClient } from '@supabase/supabase-js';
-import { prisma } from '../../../prisma/client';
+import prisma from '../../../../lib/prisma';
 
 const SECRET_KEY = "mi_clave_secreta";
 
