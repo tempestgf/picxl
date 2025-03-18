@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { createClient } from '@supabase/supabase-js';
+import { prisma } from '../../../prisma/client';
 
-const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta";
 
 // Inicializar el cliente de Supabase

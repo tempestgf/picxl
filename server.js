@@ -2,6 +2,7 @@ const { createServer } = require('https');
 const { readFileSync } = require('fs');
 const next = require('next');
 const { parse } = require('url');
+const { disconnectPrisma } = require('./prisma/client');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = require('next')({ dev });
@@ -14,11 +15,25 @@ const options = {
 };
 
 app.prepare().then(() => {
-  createServer(options, (req, res) => {
+  const server = createServer(options, (req, res) => {
     const parsedUrl = require('url').parse(req.url, true);
     handle(req, res, parsedUrl);
   }).listen(443, (err) => {
     if (err) throw err;
     console.log('> Servidor HTTPS escuchando en https://localhost');
+  });
+});
+
+// Add a graceful shutdown handler
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  
+  // Close Prisma connections
+  await disconnectPrisma();
+  
+  // Close your HTTP server
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
   });
 });
