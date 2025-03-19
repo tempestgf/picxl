@@ -1,152 +1,186 @@
-import { PrismaClient } from "@prisma/client";
-import jwt from "jsonwebtoken";
-import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
+import prisma from '../../../lib/prisma';
 
-// Singleton pattern for PrismaClient
-const globalForPrisma = global;
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-const SECRET_KEY = "mi_clave_secreta";
-
-// Inicializar el cliente de Supabase
+// Supabase config
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function authenticate(request) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const cookiesObj = Object.fromEntries(
-    cookieHeader.split("; ").map((cookie) => {
-      const [name, ...rest] = cookie.split("=");
-      return [name, rest.join("=")];
-    })
-  );
-  const token = cookiesObj.token;
-  if (!token) throw new Error("No autenticado");
+// Function to create bucket if it doesn't exist
+async function ensureBucketExists() {
   try {
-    return jwt.verify(token, SECRET_KEY);
-  } catch (err) {
-    throw new Error("Token inválido");
-  }
-}
-
-export async function GET(request) {
-  try {
-    const decoded = await authenticate(request);
-    const userId = decoded.id;
-    const tickets = await prisma.ticket.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-    return new Response(JSON.stringify({ tickets }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message || "Error interno" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
+    // First check if bucket exists
+    const listResponse = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
       }
-    );
+    });
+
+    if (listResponse.ok) {
+      const buckets = await listResponse.json();
+      const imagesBucket = buckets.find(b => b.name === 'images');
+      
+      if (imagesBucket) {
+        console.log("'images' bucket exists");
+        return true;
+      }
+    }
+    
+    // Create the bucket
+    console.log("Attempting to create 'images' bucket");
+    const createResponse = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: 'images',
+        name: 'images',
+        public: true
+      })
+    });
+    
+    if (createResponse.ok) {
+      console.log("Created 'images' bucket successfully");
+      return true;
+    } else {
+      const errorText = await createResponse.text();
+      console.error("Failed to create bucket:", errorText);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error ensuring bucket exists:", error);
+    return false;
   }
 }
 
 export async function POST(request) {
   try {
-    const decoded = await authenticate(request);
-    const userId = decoded.id;
-    // Verificar que el usuario exista
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Usuario no encontrado" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Se espera recibir imageName o, en su defecto, imageUrl y opcionalmente ticketType
-    const {
-      merchantName,
-      dateTime,
-      total,
-      imageName,
-      imageUrl: providedImageUrl,
-      ticketType,
-    } = await request.json();
+    // Parse the form data
+    const formData = await request.formData();
+    const file = formData.get("file");
     
-    // Si no se recibe imageName, se intenta extraer el nombre de archivo desde imageUrl
-    const finalImageName = imageName || (providedImageUrl ? providedImageUrl.split('/').pop() : null);
-    if (!merchantName || !dateTime || !total || (!finalImageName && !providedImageUrl)) {
-      return new Response(
-        JSON.stringify({ error: "Faltan datos del ticket" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    if (!file) {
+      return new Response(JSON.stringify({ error: "No file provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-
-    // Se espera que dateTime venga en formato "dd-MM-yy hh:mm"
-    const [datePart, timePart] = dateTime.split(" ");
-    const [day, month, year] = datePart.split("-");
-    const formattedDate = new Date(
-      `20${year}`,
-      Number(month) - 1,
-      Number(day),
-      ...timePart.split(":")
-    );
-
-    // Usar la URL completa si se proporcionó, o construir una con la URL pública de Supabase
-    let finalImageUrl;
     
-    if (providedImageUrl) {
-      // Si ya tenemos una URL completa, la usamos directamente
-      finalImageUrl = providedImageUrl;
-    } else if (finalImageName) {
-      // Si tenemos un nombre pero no URL, obtenemos la URL pública de Supabase
-      const { data } = supabase
-        .storage
-        .from('images')
-        .getPublicUrl(`uploads/${finalImageName}`);
+    // Get user ID if provided in the form data
+    const userId = formData.get("userId");
+    
+    // Convert file to Buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Generate unique filename
+    const timestamp = Date.now();
+    const uniqueId = uuidv4().split('-')[0];
+    const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    const uniqueFilename = `image-${timestamp}-${uniqueId}${fileExt}`;
+    const filePath = `uploads/${uniqueFilename}`;
+    
+    // First, ensure the bucket exists
+    await ensureBucketExists();
+    
+    console.log(`Attempting to upload file: ${uniqueFilename} to Supabase`);
+    
+    // Try to create folder if it doesn't exist (may not be necessary, but just in case)
+    try {
+      const folderCheckResponse = await fetch(`${supabaseUrl}/storage/v1/object/info/images/uploads`, {
+        method: 'HEAD',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      });
       
-      finalImageUrl = data.publicUrl;
+      if (!folderCheckResponse.ok) {
+        console.log("Creating 'uploads' folder");
+        const emptyBuffer = Buffer.from('');
+        
+        await fetch(`${supabaseUrl}/storage/v1/object/images/uploads/.folder`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/octet-stream'
+          },
+          body: emptyBuffer
+        });
+      }
+    } catch (folderError) {
+      // Ignore folder creation errors - proceed with upload
+      console.log("Folder check/creation skipped:", folderError.message);
     }
     
-    // Si no se envía ticketType, se usará "individual" por defecto
-    const finalTicketType = ticketType || "individual";
-
-    const ticket = await prisma.ticket.create({
-      data: {
-        merchantName,
-        dateTime: formattedDate,
-        total: parseFloat(total.toString().replace("€", "")),
-        imageUrl: finalImageUrl,
-        ticketType: finalTicketType,
-        user: { connect: { id: userId } },
-      },
-    });
-    
-    return new Response(
-      JSON.stringify({ message: "Ticket guardado", ticket }),
-      {
+    // Upload directly to Supabase
+    try {
+      // Try direct upload with POST request (not PUT)
+      const uploadUrl = `${supabaseUrl}/storage/v1/object/images/${filePath}`;
+      
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: buffer
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error("Supabase upload error:", errorText);
+        throw new Error(`Failed to upload to Supabase: ${errorText}`);
+      }
+      
+      // Generate the direct public URL to the uploaded file
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/images/${filePath}`;
+      
+      // If userId is provided, associate the image with the user in the database
+      let userRecord = null;
+      if (userId) {
+        try {
+          userRecord = await prisma.$transaction(async (tx) => {
+            // Use the transaction client instead of the global one
+            return await tx.user.findUnique({
+              where: { id: userId },
+              select: { id: true }
+            });
+          });
+          
+          if (userRecord) {
+            // Add image to user's gallery or do other database operations
+            // within the same transaction if needed
+          }
+        } catch (dbError) {
+          console.error("Database error:", dbError);
+          // Continue despite DB error - we still have the image URL
+        }
+      }
+      
+      console.log("Upload successful, URL:", publicUrl);
+      return new Response(JSON.stringify({ 
+        imageUrl: publicUrl,
+        success: true
+      }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
-      }
-    );
+      });
+    } catch (uploadError) {
+      console.error("Upload error:", uploadError);
+      throw uploadError;
+    }
   } catch (error) {
-    console.error("Error al guardar ticket:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Error interno" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    console.error("Unhandled upload error:", error);
+    return new Response(JSON.stringify({ 
+      error: error.message || "Server error",
+      message: "Failed to upload image. Please try again or contact support."
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

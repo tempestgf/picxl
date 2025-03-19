@@ -1,11 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { createClient } from '@supabase/supabase-js';
-
-// Singleton pattern for PrismaClient
-const globalForPrisma = global;
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import prisma from '../../../../lib/prisma';
 
 const SECRET_KEY = "mi_clave_secreta";
 
