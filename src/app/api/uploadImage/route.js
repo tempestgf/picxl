@@ -44,18 +44,12 @@ export async function POST(request) {
       .from('images')
       .getPublicUrl(`uploads/${uniqueFilename}`);
     
-    // Añadir parámetro de timestamp para evitar caché del navegador
-    const timestamp = Date.now();
-    const imageUrl = `${urlData.publicUrl}?t=${timestamp}`;
+    // Obtener la URL pública
+    const imageUrl = urlData.publicUrl;
     
     return new Response(JSON.stringify({ imageUrl }), {
       status: 200,
-      headers: { 
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error(error);
