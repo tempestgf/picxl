@@ -140,27 +140,17 @@ export async function POST(request) {
       const publicUrl = `${supabaseUrl}/storage/v1/object/public/images/${filePath}`;
       
       // If userId is provided, associate the image with the user in the database
+      // Simplified database access - avoid transactions for now
       let userRecord = null;
       if (userId) {
         try {
-          // Use a single query operation with transaction
-          userRecord = await prisma.$transaction(async (tx) => {
-            const user = await tx.user.findUnique({
-              where: { id: userId },
-              select: { id: true }
-            });
-            
-            if (user) {
-              // Add image to user's gallery or other operations
-              // Example: await tx.image.create({...})
-            }
-            
-            return user;
-          }, {
-            maxWait: 5000, // maximum time this transaction will wait to acquire the first lock
-            timeout: 10000, // maximum time for the transaction to finish
-            isolationLevel: 'ReadCommitted' // transaction isolation level
+          // Use a simple find operation without transactions
+          userRecord = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: { id: true }
           });
+          
+          // If needed, do additional operations but keep them simple
         } catch (dbError) {
           console.error("Database error:", dbError);
           // Continue despite DB error - we still have the image URL
