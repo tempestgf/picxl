@@ -1,10 +1,15 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["metrics"]
 }
 
 datasource db {
-  provider = "postgresql" // O "postgresql"/"mysql" según tu elección
-  url      = env("POSTGRES_PRISMA_URL")
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_PRISMA_URL") // uses a direct connection
 }
 
 model User {
@@ -27,4 +32,3 @@ model Ticket {
   user         User     @relation(fields: [userId], references: [id])
   userId       Int
 }
-  
