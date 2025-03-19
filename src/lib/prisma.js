@@ -4,14 +4,7 @@ import { PrismaClient } from '@prisma/client';
 // exhausting your database connection limit.
 const globalForPrisma = global;
 
-// Ensure the prisma instance is pristine at the start of every request in development
-if (process.env.NODE_ENV === 'development' && globalForPrisma.prisma) {
-  // Only disconnect if there's an existing client
-  globalForPrisma.prisma.$disconnect();
-  globalForPrisma.prisma = null;
-}
-
-// Create a new PrismaClient with pooled connections
+// Create a new PrismaClient with proper configuration
 const prismaClientSingleton = () => {
   return new PrismaClient({
     datasources: {
@@ -21,10 +14,7 @@ const prismaClientSingleton = () => {
     },
     // Add log levels for debugging if needed
     log: ['error', 'warn'],
-    // Configure connection pooling
-    __internal: {
-      useUds: true, // Use Unix Domain Socket where available
-    },
+    // Remove the __internal configuration that's causing issues
   });
 };
 
