@@ -313,56 +313,22 @@ ${ocrText}
       const formData = new FormData();
       formData.append("file", file);
       
-      // Add timestamp to help with RLS policies that might require creation time
-      formData.append("timestamp", new Date().toISOString());
-      
-      // Add ticket type context which might be needed for RLS
-      formData.append("ticketType", ticketType);
-      
       const res = await fetch("/api/uploadImage", {
         method: "POST",
         credentials: "include",
-        headers: {
-          'Accept': 'application/json',
-        },
         body: formData,
       });
       
+      const data = await res.json();
       clearInterval(progressInterval);
       setUploadProgress(90);
       
-      let data;
-      try {
-        data = await res.json();
-      } catch (parseError) {
-        console.error("Error parsing response JSON:", parseError);
-        throw new Error("Error procesando respuesta del servidor");
-      }
-      
-      if (!res.ok) {
-        console.error("Upload failed with status:", res.status);
-        console.error("Upload error details:", data);
-        const errorMsg = data?.error || "Error subiendo la imagen";
-        throw new Error(errorMsg);
-      }
-      
-      if (!data?.imageUrl) {
-        console.error("Missing imageUrl in response:", data);
-        throw new Error("La respuesta del servidor no contiene una URL de imagen");
-      }
+      if (!res.ok)
+        throw new Error(data.error || "Error subiendo la imagen");
       
       return data.imageUrl;
     } catch (error) {
       clearInterval(progressInterval);
-      console.error("Image upload error:", error);
-      
-      // Check for specific errors and provide better feedback
-      if (error.message.includes("invalid signature") || 
-          error.message.includes("jwt") ||
-          error.message.includes("authentication")) {
-        throw new Error("Error de autenticación con el servidor. Por favor, inténtalo de nuevo más tarde.");
-      }
-      
       throw error;
     }
   };
@@ -405,12 +371,10 @@ ${ocrText}
       setProgress("Subiendo imagen al servidor...");
       const imageUrl = await uploadImageToServer(imageFile);
 
-      // Ensure we use the correct image URL format
-      // If the URL is absolute (contains http), use it directly
-      // Otherwise, make it relative to our domain
-      const fullImageUrl = imageUrl.startsWith('http') 
-        ? imageUrl 
-        : `${window.location.origin}${imageUrl}`;
+      // Construir URL absoluta de imagen
+      const DOMAIN = process.env.DOMAIN;
+      const filename = imageUrl.split("/").pop();
+      const fullImageUrl = `http://${DOMAIN}/uploads/images/${filename}`;
 
       // Extraer y formatear la fecha devuelta por la IA.
       const receiptDateParsed =
