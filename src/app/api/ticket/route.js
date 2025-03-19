@@ -39,9 +39,15 @@ export async function GET(request) {
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
+    
     return new Response(JSON.stringify({ tickets }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      },
     });
   } catch (error) {
     return new Response(
@@ -107,7 +113,11 @@ export async function POST(request) {
     
     if (providedImageUrl) {
       // Si ya tenemos una URL completa, la usamos directamente
-      finalImageUrl = providedImageUrl;
+      // Añadimos un parámetro de timestamp para evitar cacheo del navegador
+      const timestamp = Date.now();
+      finalImageUrl = providedImageUrl.includes('?') 
+        ? `${providedImageUrl}&t=${timestamp}` 
+        : `${providedImageUrl}?t=${timestamp}`;
     } else if (finalImageName) {
       // Si tenemos un nombre pero no URL, obtenemos la URL pública de Supabase
       const { data } = supabase
@@ -115,7 +125,9 @@ export async function POST(request) {
         .from('images')
         .getPublicUrl(`uploads/${finalImageName}`);
       
-      finalImageUrl = data.publicUrl;
+      // Añadir parámetro de timestamp para evitar caché
+      const timestamp = Date.now();
+      finalImageUrl = `${data.publicUrl}?t=${timestamp}`;
     }
     
     // Si no se envía ticketType, se usará "individual" por defecto
@@ -136,7 +148,12 @@ export async function POST(request) {
       JSON.stringify({ message: "Ticket guardado", ticket }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        },
       }
     );
   } catch (error) {
