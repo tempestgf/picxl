@@ -4,28 +4,43 @@ import { PrismaClient } from '@prisma/client';
 // exhausting your database connection limit.
 const globalForPrisma = global;
 
-// Use specific connection options for serverless environments
+// Ensure the prisma instance is pristine at the start of every request in development
+if (process.env.NODE_ENV === 'development' && globalForPrisma.prisma) {
+  // Only disconnect if there's an existing client
+  globalForPrisma.prisma.$disconnect();
+  globalForPrisma.prisma = null;
+}
+
+// Create a new PrismaClient with pooled connections
 const prismaClientSingleton = () => {
   return new PrismaClient({
     datasources: {
       db: {
-        url: process.env.POSTGRES_PRISMA_URL_POOL || process.env.POSTGRES_PRISMA_URL,
+        url: process.env.POSTGRES_PRISMA_URL_POOL, // Use the connection pool URL
       },
     },
-    // Add connection pool configuration
-    log: ['query', 'error', 'warn'],
+    // Add log levels for debugging if needed
+    log: ['error', 'warn'],
+    // Configure connection pooling
     __internal: {
-      engine: {
-        // These settings help prevent connection issues in serverless environments
-        connectionLimit: 5,
-      },
+      useUds: true, // Use Unix Domain Socket where available
     },
   });
 };
 
-const prisma = globalForPrisma.prisma || prismaClientSingleton();
+// Use existing client instance or create a new one
+const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-// If we're not in production, add the client to the global object
+// Save reference to the client on the global object in development
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
+
+// Add a handler for cleanup during shutdown
+if (process.env.NODE_ENV !== 'production') {
+  process.on('beforeExit', () => {
+    if (globalForPrisma.prisma) {
+      globalForPrisma.prisma.$disconnect();
+    }
+  });
+}

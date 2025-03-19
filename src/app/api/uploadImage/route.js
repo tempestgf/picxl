@@ -143,18 +143,24 @@ export async function POST(request) {
       let userRecord = null;
       if (userId) {
         try {
+          // Use a single query operation with transaction
           userRecord = await prisma.$transaction(async (tx) => {
-            // Use the transaction client instead of the global one
-            return await tx.user.findUnique({
+            const user = await tx.user.findUnique({
               where: { id: userId },
               select: { id: true }
             });
+            
+            if (user) {
+              // Add image to user's gallery or other operations
+              // Example: await tx.image.create({...})
+            }
+            
+            return user;
+          }, {
+            maxWait: 5000, // maximum time this transaction will wait to acquire the first lock
+            timeout: 10000, // maximum time for the transaction to finish
+            isolationLevel: 'ReadCommitted' // transaction isolation level
           });
-          
-          if (userRecord) {
-            // Add image to user's gallery or do other database operations
-            // within the same transaction if needed
-          }
         } catch (dbError) {
           console.error("Database error:", dbError);
           // Continue despite DB error - we still have the image URL
@@ -182,5 +188,12 @@ export async function POST(request) {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
+  } finally {
+    // Ensure connection is properly handled
+    // Next.js serverless functions handle this automatically
+    // but adding this for clarity and completeness
+    if (process.env.NODE_ENV === 'development') {
+      await prisma.$disconnect();
+    }
   }
 }
