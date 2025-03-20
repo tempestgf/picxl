@@ -61,6 +61,11 @@ export async function GET(request) {
         headers: { "Content-Type": "application/json" },
       }
     );
+  } finally {
+    // Limpieza explícita sólo cuando estamos en producción
+    if (process.env.NODE_ENV === 'production') {
+      await prisma.$disconnect();
+    }
   }
 }
 
@@ -158,5 +163,10 @@ export async function POST(request) {
         headers: { "Content-Type": "application/json" },
       }
     );
+  } finally {
+    // Limpieza explícita sólo cuando estamos en producción
+    if (process.env.NODE_ENV === 'production') {
+      await prisma.$disconnect();
+    }
   }
 }
