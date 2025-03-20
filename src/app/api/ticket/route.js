@@ -30,15 +30,30 @@ export async function GET(request) {
   try {
     const decoded = await authenticate(request);
     const userId = decoded.id;
+    
+    // Add error checking for prisma
+    if (!prisma) {
+      console.error("Prisma client is undefined");
+      return new Response(
+        JSON.stringify({ error: "Database connection error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     const tickets = await prisma.ticket.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
+    
     return new Response(JSON.stringify({ tickets }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    console.error("Error in GET /api/ticket:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Error interno" }),
       {
