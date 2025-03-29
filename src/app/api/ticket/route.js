@@ -1,13 +1,7 @@
 import jwt from "jsonwebtoken";
-import { createClient } from '@supabase/supabase-js';
 import prisma from '../../../../lib/prisma';
 
 const SECRET_KEY = "mi_clave_secreta";
-
-// Inicializar el cliente de Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function authenticate(request) {
   const cookieHeader = request.headers.get("cookie") || "";
@@ -95,9 +89,8 @@ export async function POST(request) {
       ticketType,
     } = await request.json();
     
-    // Si no se recibe imageName, se intenta extraer el nombre de archivo desde imageUrl
-    const finalImageName = imageName || (providedImageUrl ? providedImageUrl.split('/').pop() : null);
-    if (!merchantName || !dateTime || !total || (!finalImageName && !providedImageUrl)) {
+    // Si no se proporciona URL de imagen, no se intentará crear una
+    if (!merchantName || !dateTime || !total || !providedImageUrl) {
       return new Response(
         JSON.stringify({ error: "Faltan datos del ticket" }),
         {
@@ -116,22 +109,9 @@ export async function POST(request) {
       Number(day),
       ...timePart.split(":")
     );
-
-    // Usar la URL completa si se proporcionó, o construir una con la URL pública de Supabase
-    let finalImageUrl;
     
-    if (providedImageUrl) {
-      // Si ya tenemos una URL completa, la usamos directamente
-      finalImageUrl = providedImageUrl;
-    } else if (finalImageName) {
-      // Si tenemos un nombre pero no URL, obtenemos la URL pública de Supabase
-      const { data } = supabase
-        .storage
-        .from('images')
-        .getPublicUrl(`uploads/${finalImageName}`);
-      
-      finalImageUrl = data.publicUrl;
-    }
+    // Usar directamente la URL proporcionada
+    const finalImageUrl = providedImageUrl;
     
     // Si no se envía ticketType, se usará "individual" por defecto
     const finalTicketType = ticketType || "individual";

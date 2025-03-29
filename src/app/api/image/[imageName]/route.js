@@ -1,40 +1,42 @@
 // src/app/api/image/[imageName]/route.js
-import { createClient } from '@supabase/supabase-js';
-
-// Inicializar el cliente de Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import fs from 'fs';
+import path from 'path';
 
 export async function GET(request, context) {
   try {
     const params = await Promise.resolve(context.params);
     const imageName = params.imageName;
     
-    // Obtener el archivo desde Supabase Storage
-    const { data, error } = await supabase
-      .storage
-      .from('images')
-      .download(`uploads/${imageName}`);
+    // Since we're not using Supabase anymore, we need to redirect to where the image is actually stored
+    // This is a placeholder implementation - you'll need to adjust based on your actual image storage
+    return new Response(
+      JSON.stringify({ message: "Supabase storage has been removed" }),
+      {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     
-    if (error || !data) {
-      throw new Error(error?.message || 'Imagen no encontrada');
+    /* 
+    // If you implement local file storage, you could use something like:
+    const imagePath = path.join(process.cwd(), 'public', 'uploads', imageName);
+    
+    if (!fs.existsSync(imagePath)) {
+      return new Response('Imagen no encontrada', { status: 404 });
     }
     
-    // Determinar el tipo de contenido basado en la extensión
+    const imageBuffer = fs.readFileSync(imagePath);
     const ext = imageName.substring(imageName.lastIndexOf('.')).toLowerCase();
     let contentType = 'image/jpeg';
     if (ext === '.png') contentType = 'image/png';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.webp') contentType = 'image/webp';
     
-    // Convertir Blob a ArrayBuffer
-    const arrayBuffer = await data.arrayBuffer();
-    
-    return new Response(arrayBuffer, {
+    return new Response(imageBuffer, {
       status: 200,
       headers: { 'Content-Type': contentType },
     });
+    */
   } catch (error) {
     console.error('Error al obtener la imagen:', error);
     return new Response('Imagen no encontrada', { status: 404 });
