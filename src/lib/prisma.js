@@ -4,7 +4,9 @@ import { PrismaClient } from '@prisma/client';
 const globalForPrisma = global;
 
 // Get the database URL from environment variables
-const databaseUrl = process.env.DATABASE_URL;
+// Fallback to a placeholder during build time
+const databaseUrl = process.env.DATABASE_URL || 
+  "postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
 // Properly initialize the Prisma client with explicit connection config
 if (!globalForPrisma.prisma) {

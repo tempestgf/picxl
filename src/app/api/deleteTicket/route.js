@@ -20,14 +20,16 @@ async function authenticate(request) {
   }
 }
 
-export async function POST(request) {
+export async function DELETE(request) {
   try {
     // Authenticate the user
     const decoded = await authenticate(request);
     const userId = decoded.id;
     
-    // Get ticket ID from request body
-    const { ticketId } = await request.json();
+    // Get the ticket ID from the URL
+    const url = new URL(request.url);
+    const ticketId = parseInt(url.searchParams.get("id"));
+    
     if (!ticketId) {
       return new Response(
         JSON.stringify({ error: "ID de ticket no proporcionado" }),
@@ -38,9 +40,9 @@ export async function POST(request) {
       );
     }
     
-    // First verify the ticket belongs to this user
+    // Check if the ticket exists and belongs to the user
     const ticket = await prisma.ticket.findUnique({
-      where: { id: parseInt(ticketId) },
+      where: { id: ticketId },
       select: { id: true, userId: true }
     });
     
@@ -56,7 +58,7 @@ export async function POST(request) {
     
     if (ticket.userId !== userId) {
       return new Response(
-        JSON.stringify({ error: "No autorizado para eliminar este ticket" }),
+        JSON.stringify({ error: "No estás autorizado para eliminar este ticket" }),
         {
           status: 403,
           headers: { "Content-Type": "application/json" },
@@ -66,7 +68,7 @@ export async function POST(request) {
     
     // Delete the ticket
     await prisma.ticket.delete({
-      where: { id: parseInt(ticketId) }
+      where: { id: ticketId }
     });
     
     return new Response(
@@ -77,7 +79,7 @@ export async function POST(request) {
       }
     );
   } catch (error) {
-    console.error("Error eliminando ticket:", error);
+    console.error("Error al eliminar ticket:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Error interno" }),
       {
@@ -86,7 +88,7 @@ export async function POST(request) {
       }
     );
   } finally {
-    // Limpieza explícita sólo cuando estamos en producción
+    // Clean up the connection only in production
     if (process.env.NODE_ENV === 'production') {
       await prisma.$disconnect();
     }
