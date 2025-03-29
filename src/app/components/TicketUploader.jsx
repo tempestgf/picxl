@@ -371,10 +371,10 @@ ${ocrText}
       setProgress("Subiendo imagen al servidor...");
       const imageUrl = await uploadImageToServer(imageFile);
 
-      // Construir URL absoluta de imagen
-      const DOMAIN = process.env.DOMAIN;
+      // Construir URL absoluta de imagen - FIXED to use NEXT_PUBLIC_DOMAIN
+      const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN || "tickets.tempestgf.es";
       const filename = imageUrl.split("/").pop();
-      const fullImageUrl = `http://${DOMAIN}/uploads/images/${filename}`;
+      const fullImageUrl = `https://${DOMAIN}${imageUrl}`;
 
       // Extraer y formatear la fecha devuelta por la IA.
       const receiptDateParsed =

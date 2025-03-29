@@ -25,14 +25,24 @@ export async function POST(request) {
     const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
     const uniqueFilename = `image-${timestamp}-${uniqueId}${fileExt}`;
     
-    // Since we're not using Supabase, implement a local storage solution
-    // This is a placeholder - you'll need to implement actual storage
+    // Implement the local file storage solution
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
-    // For demonstration, we're just returning success with a mock URL
-    // In a real implementation, you would save the file and return its actual URL
-    const mockPublicUrl = `/api/image/${uniqueFilename}`;
+    // Ensure uploads/images directory exists - FIXED PATH TO MATCH URL
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'images');
+    if (!fs.existsSync(uploadsDir)){
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
     
-    console.log("Simulated upload, filename:", uniqueFilename);
+    // Save file to local storage
+    const filePath = path.join(uploadsDir, uniqueFilename);
+    fs.writeFileSync(filePath, buffer);
+    
+    // Generate URL for the saved file - FIXED PATH TO MATCH EXPECTED URL
+    const publicUrl = `/uploads/images/${uniqueFilename}`;
+    
+    console.log("File saved successfully at:", filePath);
     
     // If userId is provided, associate the image with the user in the database
     let userRecord = null;
@@ -47,34 +57,13 @@ export async function POST(request) {
       }
     }
     
-    console.log("Upload simulation complete, URL:", mockPublicUrl);
     return new Response(JSON.stringify({ 
-      imageUrl: mockPublicUrl,
+      imageUrl: publicUrl,
       success: true
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-    
-    /* 
-    // If you implement local file storage, you could use something like:
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)){
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    
-    // Save file to local storage
-    const filePath = path.join(uploadsDir, uniqueFilename);
-    fs.writeFileSync(filePath, buffer);
-    
-    // Generate URL for the saved file
-    const publicUrl = `/uploads/${uniqueFilename}`;
-    */
-    
   } catch (error) {
     console.error("Unhandled upload error:", error);
     return new Response(JSON.stringify({ 
