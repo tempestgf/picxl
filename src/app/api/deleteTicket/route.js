@@ -40,6 +40,18 @@ export async function DELETE(request) {
       );
     }
     
+    // Check if prisma client is available
+    if (!prisma || typeof prisma.ticket?.findUnique !== 'function') {
+      console.error("Prisma client is not properly initialized");
+      return new Response(
+        JSON.stringify({ error: "Database connection error" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     // Check if the ticket exists and belongs to the user
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },

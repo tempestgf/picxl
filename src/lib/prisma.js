@@ -7,43 +7,58 @@ import { PrismaClient } from '@prisma/client';
 // Properly define globalThis for Next.js environment
 const globalForPrisma = globalThis;
 
-// Get the database URL from environment variables
-const databaseUrl = process.env.DATABASE_URL;
-
-// Validate database URL before proceeding
-if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is not defined. Please provide a valid database URL in your environment variables."
-  );
-}
+// Check if we're in a build environment (Next.js build process)
+const isBuildTime = process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build';
 
 // Create a client object for export
 let prisma;
 
-if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
+// Skip actual client initialization during build time to prevent errors
+if (isBuildTime) {
+  console.log('Build time detected, using mock Prisma client');
+  prisma = {
+    // Provide mock implementations for common methods
+    $connect: async () => {},
+    $disconnect: async () => {},
+    // Add mock implementations for models you use
+    ticket: {
+      findUnique: async () => null,
+      findMany: async () => [],
+      create: async () => ({}),
+      delete: async () => ({})
     },
-  });
-}
-
-// Assign the client instance with proper type safety
-prisma = globalForPrisma.prisma;
-
-// Logging to help debug the initialization
-if (!prisma) {
-  console.error("Failed to initialize Prisma client");
-  // Fall back to a new instance if the global one fails
-  prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
-    },
-  });
+    user: {
+      findUnique: async () => null,
+    }
+  };
+} else {
+  // Regular runtime initialization
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    console.warn("DATABASE_URL is not defined. Database operations will fail.");
+  }
+  
+  if (!globalForPrisma.prisma) {
+    try {
+      globalForPrisma.prisma = new PrismaClient({
+        datasources: databaseUrl ? {
+          db: {
+            url: databaseUrl,
+          },
+        } : undefined,
+      });
+    } catch (e) {
+      console.error("Failed to initialize Prisma client:", e);
+      // Provide a minimal mock client as fallback
+      globalForPrisma.prisma = {
+        $connect: async () => {},
+        $disconnect: async () => {},
+      };
+    }
+  }
+  
+  prisma = globalForPrisma.prisma;
 }
 
 export default prisma;
