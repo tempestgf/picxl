@@ -8,8 +8,14 @@ import { PrismaClient } from '@prisma/client';
 const globalForPrisma = globalThis;
 
 // Get the database URL from environment variables
-const databaseUrl = process.env.DATABASE_URL || 
-  "postgresql://placeholder:placeholder@localhost:5432/placeholder";
+const databaseUrl = process.env.DATABASE_URL;
+
+// Validate database URL before proceeding
+if (!databaseUrl) {
+  throw new Error(
+    "DATABASE_URL is not defined. Please provide a valid database URL in your environment variables."
+  );
+}
 
 // Create a client object for export
 let prisma;
