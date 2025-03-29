@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../lib/prisma";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta"; // Ajusta y guarda este valor de forma segura
 
 export async function GET(request) {

@@ -1,10 +1,9 @@
 // src/app/api/login/route.js
 import { cookies } from "next/headers";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta";
 
 async function getCookieStore() {

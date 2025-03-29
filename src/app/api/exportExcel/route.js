@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../lib/prisma";
 import * as XLSX from "xlsx";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta";
 
 async function authenticate(request) {

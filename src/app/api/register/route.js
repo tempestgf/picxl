@@ -1,10 +1,9 @@
 // src/app/api/register/route.js
 import { cookies } from "next/headers";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const prisma = new PrismaClient();
 const SECRET_KEY = "mi_clave_secreta";
 // Puedes definir el código beta en una variable de entorno o usar un valor por defecto
 const BETA_CODE = process.env.BETA_CODE;
